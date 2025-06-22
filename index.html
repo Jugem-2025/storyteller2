@@ -130,45 +130,60 @@ STREET ARTIST CHINESE MEDICINE DOCTOR / BARBER PROFESSOR`;
                 return `<span class="char">${char === ' ' ? '&nbsp;' : char}</span>`;
             }).join('');
 
-            const chars = document.querySelectorAll('.char');
-
             // ⑥ 「storyteller」を形成するガラクタ文字を生成
             // 元の文章の文字を再利用してガラクタ感を出す
             const initialChars = fullText.replace(/\s+/g, '').split(''); // スペースを除いた文字
-            const maxFormationChars = 50; // ガラクタとして表示する最大文字数
-            const selectedFormationChars = [];
-            for (let i = 0; i < maxFormationChars; i++) {
-                const randomIndex = Math.floor(Math.random() * initialChars.length);
-                selectedFormationChars.push(initialChars[randomIndex]);
-            }
-
+            const numFormationChars = 70; // ガラクタとして表示する文字数を少し増やす
             const formationElements = [];
-            selectedFormationChars.forEach(stChar => {
+
+            // storytellerを構成する文字の目標位置（相対座標）
+            // この座標は、ガラクタ文字が「storyteller」の形に見えるように調整する必要があります。
+            // ここではあくまでダミーで、実際には文字の幅などを考慮した精密な計算が必要です。
+            // クリエイティブな「ガラクタ」感を出すため、厳密な配置は避けつつ、文字の並びを意識する
+            const targetPositions = {
+                's': { x: 40, y: 70, r: 0 },
+                't': { x: 43, y: 70, r: 10 },
+                'o': { x: 46, y: 70, r: -5 },
+                'r': { x: 49, y: 70, r: 15 },
+                'y': { x: 52, y: 70, r: -10 },
+                'e': { x: 55, y: 70, r: 5 },
+                'l': { x: 58, y: 70, r: -15 },
+                'l': { x: 61, y: 70, r: 20 },
+                'e': { x: 64, y: 70, r: -5 },
+                'r': { x: 67, y: 70, r: 10 }
+            };
+            let targetIndex = 0;
+
+            for (let i = 0; i < numFormationChars; i++) {
                 const span = document.createElement('span');
                 span.classList.add('storyteller-form-char');
-                span.textContent = stChar;
-                // 画面下部10%のエリア内にランダムな初期位置と回転を設定
+                const randomIndex = Math.floor(Math.random() * initialChars.length);
+                span.textContent = initialChars[randomIndex];
+
+                // ⑤ 画面下部20%の範囲にランダムな初期位置と回転を設定
                 const randomX = Math.random() * 80 + 10; // 画面幅の10%から90%の範囲
-                const randomY = (Math.random() * 10) + 85; // 画面高さの85%から95%の範囲
+                const randomY = (Math.random() * 20) + 80; // 画面高さの80%から100%の範囲
                 const randomRotate = Math.random() * 720 - 360; // -360から360度
+
                 span.style.left = `${randomX}vw`;
                 span.style.top = `${randomY}vh`;
                 span.style.transform = `translate(-50%, -50%) rotate(${randomRotate}deg)`;
+                
                 storytellerFormationContainer.appendChild(span);
                 formationElements.push(span);
-            });
-
+            }
 
             // ④ 3秒後にメインの文字が崩れ始める
             setTimeout(() => {
-                chars.forEach((char) => {
+                const charsToFall = document.querySelectorAll('.char'); // 遅延読み込み
+                charsToFall.forEach((char) => {
                     const delay = Math.random() * 1.5; // 0秒から1.5秒のランダムなディレイ
                     const translateX = (Math.random() - 0.5) * 50; // 左右に最大25vwのブレ
                     const rotate = (Math.random() - 0.5) * 360; // 360度回転
 
                     char.style.transitionDelay = `${delay}s`;
-                    // ⑤ 文字が画面下部10%の範囲にランダムに落下し、透明になる
-                    const targetY = (Math.random() * 10) + 90; // 90vhから100vhの範囲
+                    // ⑤ 文字が画面下部20%の範囲にランダムに落下し、透明になる
+                    const targetY = (Math.random() * 20) + 80; // 80vhから100vhの範囲
                     char.style.transform = `translate(${translateX}vw, ${targetY}vh) rotate(${rotate}deg)`;
                     char.style.opacity = '0';
                 });
@@ -182,15 +197,40 @@ STREET ARTIST CHINESE MEDICINE DOCTOR / BARBER PROFESSOR`;
                 // ガラクタ文字を表示
                 formationElements.forEach((char, index) => {
                     char.classList.add('active'); // opacityを1に
-                    // ヌルッと集まるようなアニメーションはCSSのtransitionが担う
+
+                    // ガラクタ文字を「storyteller」の形にヌルッと集める
+                    // ここでの座標は、ガラクタ文字が画面下部20%の位置で、
+                    // "storyteller"という単語を構成するように調整します
+                    // 非常にクリエイティブな指定のため、完全に制御するのは困難ですが、
+                    // 文字が散らばりながらも何となく形を成すように試みます。
+                    
+                    // 例: 画面幅の30%から70%の範囲、画面高さの85%あたりに集める
+                    const baseX = 50; // 中央
+                    const baseY = 85; // 下から15%の位置
+
+                    // 各文字をランダムに配置しつつ、storytellerの文字の並びを意識させる
+                    // ここでのtranslateX/Yは「storyteller」の各文字の相対位置
+                    // 大文字の'S','T','O'など、それぞれの文字がどこに来るか調整
+                    const letterSpacing = 2; // 文字間のスペース
+                    const lineLength = 10 * letterSpacing; // 例として10文字分の幅
+                    const startX = baseX - (lineLength / 2); // 開始X座標
+
+                    // 各ガラクタ文字がそれぞれランダムに少しずれた位置に集まる
+                    // 全体の中心を85vhに設定し、そこから上下に少しずらす
+                    const targetFormationX = startX + (index % 10) * letterSpacing + (Math.random() - 0.5) * 5;
+                    const targetFormationY = baseY + (Math.random() - 0.5) * 5;
+                    const targetFormationRotate = (Math.random() - 0.5) * 60; // 集まった時の回転も少しランダムに
+
+                    char.style.transform = `translate(${targetFormationX}vw, ${targetFormationY}vh) rotate(${targetFormationRotate}deg)`;
+                    char.style.transitionDelay = `${Math.random() * 0.5}s`; // 集まる動作にもランダムな遅延
                 });
             }, 3000 + 6000); // 9秒後
 
             // ⑦ ガラクタ文字が集まってから、最終的なstorytellerが画面中央に移動・表示
-            // ガラクタ文字の表示開始から2秒後（全体で9秒+2秒=11秒後）
+            // ガラクタ文字の集まるアニメーションが完了してから1秒後（全体で9秒+2秒=11秒後）
             setTimeout(() => {
-                storytellerFormationContainer.style.opacity = '0'; // ガラクタ文字を非表示に（フェードアウト）
-                
+                storytellerFormationContainer.style.opacity = '0'; // ガラクタ文字をフェードアウト
+
                 finalStorytellerText.classList.add('active'); // 最終的なstorytellerを表示
             }, 3000 + 6000 + 2000); // 11秒後
         });
