@@ -34,6 +34,7 @@
             width: 90%; /* コンテンツの幅を調整 */
             max-height: 90vh; /* 画面に収まるように高さを制限 */
             overflow: hidden; /* 最初は隠れるように */
+            z-index: 1;
         }
 
         .char {
@@ -43,36 +44,51 @@
             will-change: transform, opacity; /* アニメーションのパフォーマンス改善 */
         }
 
-        .fallen-text-container {
+        .storyteller-form-char {
             position: absolute;
-            /* ⑤ 画面の表示されている部分の下から3分の1程度の位置 */
-            /* bottom: 33.33vh は画面下から1/3の位置。文字の高さの半分を引いて中央揃え */
-            bottom: calc(33.33vh - (15vw / 2)); 
-            left: 50%;
-            transform: translateX(-50%);
-            font-family: 'Oswald', sans-serif;
             color: black;
-            font-size: 15vw; /* storytellerの文字サイズ */
-            font-weight: bold; /* storytellerを強調 */
+            font-size: 2vw; /* ⑥ ガラクタ感のある文字のサイズ */
             opacity: 0; /* 最初は非表示 */
-            transition: opacity 1s ease-in; /* ⑥ ヌルッと集まる動作 (1秒) */
-            white-space: nowrap; /* "storyteller"が途中で改行されないように */
-            z-index: 10; /* 他の要素より手前に表示 */
+            transform: translate(-50%, -50%) rotate(0deg); /* 初期位置は適当 */
+            transition: transform 2s ease-in-out, opacity 2s ease-in-out; /* ヌルッと集まる動作 */
+            z-index: 2;
+            pointer-events: none; /* クリック不可に */
         }
 
-        .fallen-text-container.active {
-            opacity: 1; /* ⑥ アクティブ時に表示 */
+        .storyteller-form-char.active {
+            opacity: 1; /* 表示 */
+        }
+
+        .final-storyteller {
+            font-family: 'Oswald', sans-serif; /* ⑦ 最終的なフォント */
+            color: black;
+            font-size: 15vw; /* ⑦ 最終的なサイズ */
+            font-weight: bold;
+            position: absolute;
+            top: 50%; /* ⑦ 画面中央に移動 */
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0; /* 最初は非表示 */
+            transition: opacity 1s ease-in, transform 1s ease-in; /* ヌルッと移動・表示 */
+            white-space: nowrap;
+            z-index: 3;
+            pointer-events: none; /* クリック不可に */
+        }
+
+        .final-storyteller.active {
+            opacity: 1;
         }
     </style>
 </head>
 <body>
     <div class="text-container" id="textContainer"></div>
-    <div class="fallen-text-container" id="storytellerText">storyteller</div>
+    <div id="storytellerFormationContainer"></div> <div class="final-storyteller" id="finalStorytellerText">storyteller</div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const textContainer = document.getElementById('textContainer');
-            const storytellerText = document.getElementById('storytellerText');
+            const storytellerFormationContainer = document.getElementById('storytellerFormationContainer');
+            const finalStorytellerText = document.getElementById('finalStorytellerText');
 
             // ③ ページ表示時に表示される文章
             const fullText = `FENG SHUI MASTER / BARBER BORDER HOPPER / MATCHMAKER / NEW YORKER AUXILIARY POLICE TAILOR / DRONE PILOT TEA HOUSE OWNER STREET ARTIST / MONK NEW YORKER / TAILOR / SOCIAL WORKER CHEESE ARTISAN / FORTUNE TELLER / PRIEST MONK STORYTELLER / KUNG FU MASTER / HOMELESS MATCHMAKER / PRESCHOOL TEACHER
@@ -111,37 +127,72 @@ STREET ARTIST CHINESE MEDICINE DOCTOR / BARBER PROFESSOR`;
 
             // 文章を一文字ずつspanタグで囲む
             textContainer.innerHTML = fullText.split('').map(char => {
-                // 空白文字は &nbsp; に置き換えてスペースとして表示
-                return `<span class="char">${char === ' ' ? '&nbsp;' : char}</span>`; 
+                return `<span class="char">${char === ' ' ? '&nbsp;' : char}</span>`;
             }).join('');
 
             const chars = document.querySelectorAll('.char');
 
-            // ④ 3秒後に文字が崩れ始める
+            // ⑥ 「storyteller」を形成するガラクタ文字を生成
+            // 元の文章の文字を再利用してガラクタ感を出す
+            const initialChars = fullText.replace(/\s+/g, '').split(''); // スペースを除いた文字
+            const maxFormationChars = 50; // ガラクタとして表示する最大文字数
+            const selectedFormationChars = [];
+            for (let i = 0; i < maxFormationChars; i++) {
+                const randomIndex = Math.floor(Math.random() * initialChars.length);
+                selectedFormationChars.push(initialChars[randomIndex]);
+            }
+
+            const formationElements = [];
+            selectedFormationChars.forEach(stChar => {
+                const span = document.createElement('span');
+                span.classList.add('storyteller-form-char');
+                span.textContent = stChar;
+                // 画面下部10%のエリア内にランダムな初期位置と回転を設定
+                const randomX = Math.random() * 80 + 10; // 画面幅の10%から90%の範囲
+                const randomY = (Math.random() * 10) + 85; // 画面高さの85%から95%の範囲
+                const randomRotate = Math.random() * 720 - 360; // -360から360度
+                span.style.left = `${randomX}vw`;
+                span.style.top = `${randomY}vh`;
+                span.style.transform = `translate(-50%, -50%) rotate(${randomRotate}deg)`;
+                storytellerFormationContainer.appendChild(span);
+                formationElements.push(span);
+            });
+
+
+            // ④ 3秒後にメインの文字が崩れ始める
             setTimeout(() => {
                 chars.forEach((char) => {
-                    // 落下開始にランダムなディレイ (0秒から1.5秒)
-                    const delay = Math.random() * 1.5; 
-                    // 左右へのランダムなブレ (ビューポート幅の-25%から+25%)
-                    const translateX = (Math.random() - 0.5) * 50; 
-                    // 360度ランダムな回転
-                    const rotate = (Math.random() - 0.5) * 360; 
+                    const delay = Math.random() * 1.5; // 0秒から1.5秒のランダムなディレイ
+                    const translateX = (Math.random() - 0.5) * 50; // 左右に最大25vwのブレ
+                    const rotate = (Math.random() - 0.5) * 360; // 360度回転
 
                     char.style.transitionDelay = `${delay}s`;
-                    // 画面下へ移動 (100vh) させ、ランダムなブレと回転を適用
-                    char.style.transform = `translate(${translateX}vw, 100vh) rotate(${rotate}deg)`;
-                    char.style.opacity = '0'; // 落下と共に透明に
+                    // ⑤ 文字が画面下部10%の範囲にランダムに落下し、透明になる
+                    const targetY = (Math.random() * 10) + 90; // 90vhから100vhの範囲
+                    char.style.transform = `translate(${translateX}vw, ${targetY}vh) rotate(${rotate}deg)`;
+                    char.style.opacity = '0';
                 });
             }, 3000); // 3秒後
 
-            // ⑥ 崩れ落ちた文字が全て積もった後に"storyteller"を形成
-            // 落下開始ディレイ (3秒) + 落下アニメーション時間 (6秒) = 9秒後に実行
+            // ⑥ 崩れ落ちた文字が全て透明になるタイミングで、ガラクタ文字が「storyteller」を形成
+            // 落下開始3秒 + 落下時間6秒 = 9秒後にガラクタ文字を表示開始
             setTimeout(() => {
                 textContainer.style.opacity = '0'; // 元のテキストコンテナを完全に非表示に
 
-                // storytellerの文字をヌルッと表示 (transitionで制御)
-                storytellerText.classList.add('active');
+                // ガラクタ文字を表示
+                formationElements.forEach((char, index) => {
+                    char.classList.add('active'); // opacityを1に
+                    // ヌルッと集まるようなアニメーションはCSSのtransitionが担う
+                });
             }, 3000 + 6000); // 9秒後
+
+            // ⑦ ガラクタ文字が集まってから、最終的なstorytellerが画面中央に移動・表示
+            // ガラクタ文字の表示開始から2秒後（全体で9秒+2秒=11秒後）
+            setTimeout(() => {
+                storytellerFormationContainer.style.opacity = '0'; // ガラクタ文字を非表示に（フェードアウト）
+                
+                finalStorytellerText.classList.add('active'); // 最終的なstorytellerを表示
+            }, 3000 + 6000 + 2000); // 11秒後
         });
     </script>
 </body>
