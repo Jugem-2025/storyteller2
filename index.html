@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Text Display</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #E81F27; /* 背景の色 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .text-container {
+            font-family: 'Oswald', sans-serif; /* フォント */
+            color: black; /* 文字色 */
+            font-size: 3vw; /* 文字サイズ */
+            text-align: center;
+            line-height: 1.2;
+            word-break: break-word;
+            white-space: pre-wrap;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+
+        .char {
+            display: inline-block;
+            transition: transform 6s ease-out, opacity 6s ease-out; /* 崩れ落ちるアニメーション時間 */
+            position: relative;
+            will-change: transform, opacity;
+        }
+
+        .fallen-text-container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Oswald', sans-serif;
+            color: black;
+            font-size: 15vw; /* storytellerのサイズ */
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        .fallen-text-container.active {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="text-container" id="textContainer"></div>
+    <div class="fallen-text-container" id="storytellerText">storyteller</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const textContainer = document.getElementById('textContainer');
+            const storytellerText = document.getElementById('storytellerText');
+
+            const fullText = `FENG SHUI MASTER / BARBER BORDER HOPPER / MATCHMAKER / NEW YORKER AUXILIARY POLICE TAILOR / DRONE PILOT TEA HOUSE OWNER STREET ARTIST / MONK NEW YORKER / TAILOR / SOCIAL WORKER CHEESE ARTISAN / FORTUNE TELLER / PRIEST MONK STORYTELLER / KUNG FU MASTER / HOMELESS MATCHMAKER / PRESCHOOL TEACHER
+GRAFFITI ARTIST FENG SHUI MASTER
+PRIEST / JUDGE ENGLISH TEACHER / BORDER HOPPER NEW YORKER COMMUNITY LEADER / SOCIAL WORKER NOVELIST NEW YORKER CHINESE MEDICINE DOCTOR / CHEESE ARTISAN STREET ARTIST JOURNALIST / AUXILIARY POLICE PROFESSOR
+DRONE PILOT NEW YORKER / FENG SHUI MASTER STORYTELLER
+MURALIST BORDER HOPPER / TEA HOUSE OWNER / CHEESE ARTISAN / JUDGE
+SOCIAL WORKER JEWELER / NOVELIST / PRIEST / MURALIST
+COMMUNITY MEMBER / ENGLISH TEACHER BARBER
+GRAFFITI ARTIST / PROFESSOR SOCIAL WORKER TAILOR
+ENGLISH TEACHER MATCHMAKER HOMELESS
+HOMELESS STREET SINGER / STORYTELLER MONK
+STREET ARTIST CHINESE MEDICINE DOCTOR / BARBER PROFESSOR
+FENG SHUI MASTER / BARBER BORDER HOPPER / MATCHMAKER / NEW YORKER AUXILIARY POLICE TAILOR / DRONE PILOT TEA HOUSE OWNER STREET ARTIST / MONK NEW YORKER / TAILOR / SOCIAL WORKER CHEESE ARTISAN / FORTUNE TELLER / PRIEST MONK STORYTELLER / KUNG FU MASTER / HOMELESS MATCHMAKER / PRESCHOOL TEACHER
+GRAFFITI ARTIST FENG SHUI MASTER
+PRIEST / JUDGE ENGLISH TEACHER / BORDER HOPPER NEW YORKER COMMUNITY LEADER / SOCIAL WORKER NOVELIST NEW YORKER CHINESE MEDICINE DOCTOR / CHEESE ARTISAN STREET ARTIST JOURNALIST / AUXILIARY POLICE PROFESSOR
+DRONE PILOT NEW YORKER / FENG SHUI MASTER STORYTELLER
+MURALIST BORDER HOPPER / TEA HOUSE OWNER / CHEESE ARTISAN / JUDGE
+SOCIAL WORKER JEWELER / NOVELIST / PRIEST / MURALIST
+COMMUNITY MEMBER / ENGLISH TEACHER BARBER
+GRAFFITI ARTIST / PROFESSOR SOCIAL WORKER TAILOR
+ENGLISH TEACHER MATCHMAKER HOMELESS
+HOMELESS STREET SINGER / STORYTELLER MONK
+STREET ARTIST CHINESE MEDICINE DOCTOR / BARBER PROFESSOR
+FENG SHUI MASTER / BARBER BORDER HOPPER / MATCHMAKER / NEW YORKER AUXILIARY POLICE TAILOR / DRONE PILOT TEA HOUSE OWNER STREET ARTIST / MONK NEW YORKER / TAILOR / SOCIAL WORKER CHEESE ARTISAN / FORTUNE TELLER / PRIEST MONK STORYTELLER / KUNG FU MASTER / HOMELESS MATCHMAKER / PRESCHOOL TEACHER
+GRAFFITI ARTIST FENG SHUI MASTER
+PRIEST / JUDGE ENGLISH TEACHER / BORDER HOPPER NEW YORKER COMMUNITY LEADER / SOCIAL WORKER NOVELIST NEW YORKER CHINESE MEDICINE DOCTOR / CHEESE ARTISAN STREET ARTIST JOURNALIST / AUXILIARY POLICE PROFESSOR
+DRONE PILOT NEW YORKER / FENG SHUI MASTER STORYTELLER
+MURALIST BORDER HOPPER / TEA HOUSE OWNER / CHEESE ARTISAN / JUDGE
+SOCIAL WORKER JEWELER / NOVELIST / PRIEST / MURALIST
+COMMUNITY MEMBER / ENGLISH TEACHER BARBER
+GRAFFITI ARTIST / PROFESSOR SOCIAL WORKER TAILOR
+ENGLISH TEACHER MATCHMAKER HOMELESS
+HOMELESS STREET SINGER / STORYTELLER MONK
+STREET ARTIST CHINESE MEDICINE DOCTOR / BARBER PROFESSOR`;
+
+            // 文章を一文字ずつspanタグで囲む
+            textContainer.innerHTML = fullText.split('').map(char => {
+                return `<span class="char">${char === ' ' ? '&nbsp;' : char}</span>`;
+            }).join('');
+
+            const chars = document.querySelectorAll('.char');
+
+            // 3秒後に文字が崩れ始める
+            setTimeout(() => {
+                chars.forEach((char, index) => {
+                    const delay = Math.random() * 1.5; // 0秒から1.5秒のランダムなディレイ
+                    const translateX = (Math.random() - 0.5) * 50; // 左右に最大25vwのブレ
+                    const rotate = (Math.random() - 0.5) * 360; // 360度回転
+
+                    char.style.transitionDelay = `${delay}s`;
+                    char.style.transform = `translate(${translateX}vw, 100vh) rotate(${rotate}deg)`;
+                    char.style.opacity = '0';
+                });
+            }, 3000); // 3秒後
+
+            // 崩れ落ちた文字が全て積もった後に"storyteller"を形成
+            setTimeout(() => {
+                textContainer.style.opacity = '0'; // 元のテキストコンテナを非表示にする
+                storytellerText.classList.add('active'); // storytellerの文字を表示
+            }, 3000 + 6000); // 3秒（開始ディレイ）+ 6秒（落下時間） = 9秒後
+        });
+    </script>
+</body>
+</html>
